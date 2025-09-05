@@ -15,14 +15,14 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Allow your deployed frontend
+// ✅ Allow frontend (Vercel + Local)
 app.use(
   cors({
     origin: [
-      "https://urlshortner-tvgb.vercel.app", // frontend on Vercel
-      "http://localhost:5173"                // local dev
+      "https://urlshortner-tvgb.vercel.app", // frontend deployed on Vercel
+      "http://localhost:5173"                // frontend local dev
     ],
-    credentials: true, // allow cookies
+    credentials: true,
   })
 );
 
@@ -30,21 +30,33 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Middleware
+// ✅ Middleware
 app.use(attachUser);
 
-// Routes
+// ✅ Routes
 app.use("/api/user", user_routes);
 app.use("/api/auth", auth_routes);
 app.use("/api/create", short_url);
 app.get("/:id", redirectFromShortUrl);
 
-// Error handler
+// ✅ Health check route (test if backend works)
+app.get("/ping", (req, res) => {
+  res.json({ message: "pong 🏓 Backend is live!" });
+});
+
+// ✅ Error handler
 app.use(errorHandler);
 
-// ✅ Listen on Vercel’s provided port or fallback to 3000 locally
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  connectDB();
-  console.log(`Server is running on port ${PORT}`);
-});
+// ✅ Connect DB once
+connectDB();
+
+// ✅ Export app for Vercel
+export default app;
+
+// ✅ Still support local dev
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running locally on http://localhost:${PORT}`);
+  });
+}
